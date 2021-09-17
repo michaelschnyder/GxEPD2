@@ -1,8 +1,50 @@
-# GxEPD2
+# Fork of GxEPD2: Configurable SPI
+
+## Added Feature: Configure SPI pins and channel
+I was looking out for running a display and a SD card independently (different SPI busses) as I run a multi-core device. See
+* [Use of different pins for SPI with GxEPD2](https://forum.arduino.cc/t/use-of-different-pins-for-spi-with-gxepd2/905622)
+* [How to use HSPI buses with GxEPD2 library on ESP32 DevkitC v4](https://forum.arduino.cc/t/how-to-use-hspi-buses-with-gxepd2-library-on-esp32-devkitc-v4/642143)
+
+After a chick chat with the original author, I forked the library and added the following functionality
+* Mapping the SPI pins to any other pin as you like by using the internal multiplexer functionality
+* Change the SPI BUS ID (VSPI, HSPI) for any display, so that either bus can be used exclusively for one device
+
+## Usage
+
+**PlatformIO Dependency**
+Add this repository as a dependency instead the original one
+```
+lib_deps = 
+	; zinggjm/GxEPD2@^1.3.7
+	GxEPD2=https://github.com/michaelschnyder/GxEPD2/archive/refs/heads/Add-Support-For-Custom-SPI-Pins.zip
+	adafruit/Adafruit GFX Library@^1.10.11
+	adafruit/Adafruit BusIO@^1.9.1
+```
+**Initialization**
+```
+const int SCRN_BUSY = 26;     // ePaper Busy indicator (SPI MISO aquivalent)
+const int SCRN_RSET = 13;     // ePaper Reset switch
+const int SCRN_DC   = 12;     // ePaper Data/Command selection
+const int SCRN_CS   = 15;     // SPI Channel Chip Selection for ePaper
+const int SCRN_SCK  = 14;     // SPI Channel Click
+const int SCRN_SDI  = 27;     // SPI Channel MOSI Pin  
+const int SCRN_SPI_CHAN = 2;  // HSPI
+
+GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> display(GxEPD2_DRIVER_CLASS(SCRN_CS, SCRN_DC, SCRN_RSET, SCRN_BUSY));
+
+SPIClass otherSPI(HSPI); // Default is VSPI, which is probably in use for the SD Card
+display.init(SCRN_SCK, SCRN_BUSY, SCRN_SDI, SCRN_CS, SCRN_SPI_CHAN);
+```
+This has been used in one of my projects and works as a expected
+* https://github.com/michaelschnyder/IoTalkie/blob/main/src/firmware/src/ui/graphical/display_selection.h#L136
+* https://github.com/michaelschnyder/IoTalkie/blob/main/src/firmware/src/ui/graphical/Screen.h
+* https://github.com/michaelschnyder/IoTalkie/blob/main/src/firmware/src/ui/graphical/Screen.cpp#L6
+
+### Note
+The code has only be implemented for one specific display class, which includes black and white displays.
+
 ## Arduino Display Library for SPI E-Paper Displays
-
 - With full Graphics and Text support using Adafruit_GFX
-
 - For SPI e-paper displays from Dalian Good Display 
 - and SPI e-paper boards from Waveshare
 
